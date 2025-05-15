@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
+      POSTGRES_DB: docker-compose
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  product:
+    build:
+      number: 1
+      context: ./product
+    restart: on-failure
+    environment:
+      DATABASE_URL: postgresql://postgres:1234@postgres:5432/docker-compose
+    ports:
+      - "3001:3000"
+    depends_on:
+      - postgres
+    volumes:
+      - ./product:/usr/src/app
+    command: yarn start:dev
+    working_dir: /usr/src/app
+
+  user:
+    build:
+      context: ./user
+    restart: on-failure
+    environment:
+      DATABASE_URL: postgresql://postgres:1234@postgres:5432/docker-compose
+    ports:
+      - "3002:3000"
+    depends_on:
+      - postgres
+    volumes:
+      - ./user:/usr/src/app
+    command: yarn start:dev
+    working_dir: /usr/src/app
+
+volumes:
+  pgdata:
